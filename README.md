@@ -1,273 +1,196 @@
 # The Unofficial Guide — Project 1
 
-> **How to use this template:**
-> Complete each section *after* you've built and tested the corresponding part of your system.
-> Do not write placeholder text — if a section isn't done yet, leave it blank and come back.
-> Every section below is required for submission. One-liners will not receive full credit.
-
 ---
 
 ## Domain
 
-<!-- What topic or category of knowledge does your system cover?
-     Why is this knowledge valuable, and why is it hard to find through official channels?
-     Example: "Student reviews of CS professors at [university] — useful because official
-     course descriptions don't reflect teaching style, exam difficulty, or workload." -->
+Student reviews of Babson College professors collected from Rate My Professors. This knowledge is valuable because official course catalogs and syllabi don't tell students what professors are actually like to learn from — how hard their exams are, whether participation is graded heavily, or whether the workload is manageable. Students rely on word of mouth and review sites to make informed course selection decisions, but this information is scattered and hard to search.
 
 ---
 
 ## Document Sources
 
-<!-- List every source you collected documents from.
-     Be specific: include URLs, subreddit names, forum thread titles, or file names.
-     Aim for variety — sources that together cover different subtopics or perspectives. -->
-
 | # | Source | Type | URL or file path |
 |---|--------|------|-----------------|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
-| 5 | | | |
-| 6 | | | |
-| 7 | | | |
-| 8 | | | |
-| 9 | | | |
-| 10 | | | |
+| 1 | Rate My Professors | Professor reviews | documents/prof_paul_schmitz.txt |
+| 2 | Rate My Professors | Professor reviews | documents/prof_paul_schmitz.txt |
+| 3 | Rate My Professors | Professor reviews | documents/prof_paul_schmitz.txt |
+| 4 | Rate My Professors | Professor reviews | documents/prof_lee_gustafson.txt |
+| 5 | Rate My Professors | Professor reviews | documents/prof_lee_gustafson.txt |
+| 6 | Rate My Professors | Professor reviews | documents/prof_lee_gustafson.txt |
+| 7 | Rate My Professors | Professor reviews | documents/prof_vincent_onyemah.txt |
+| 8 | Rate My Professors | Professor reviews | documents/prof_vincent_onyemah.txt |
+| 9 | Rate My Professors | Professor reviews | documents/prof_kandice_hauf.txt |
+| 10 | Rate My Professors | Professor reviews | documents/prof_kandice_hauf.txt |
 
 ---
 
 ## Chunking Strategy
 
-<!-- Describe your chunking approach with enough specificity that someone else could reproduce it.
-     Include:
-     - Chunk size (characters or tokens) and why that size fits your documents
-     - Overlap size and why (or why not) you used overlap
-     - Any preprocessing you did before chunking (e.g., stripping HTML, removing headers)
-     - What your final chunk count was across all documents -->
+**Chunk size:** 300 characters
 
-**Chunk size:**
+**Overlap:** 50 characters
 
-**Overlap:**
+**Why these choices fit your documents:** Each professor review is short (2-5 sentences). A 300-character chunk is large enough to contain one complete review thought without cutting it in half, but small enough to return targeted results for specific questions. Overlap of 50 characters ensures that if a key opinion spans a chunk boundary, it still appears intact in at least one chunk.
 
-**Why these choices fit your documents:**
-
-**Final chunk count:**
+**Final chunk count:** 18 chunks across 4 documents
 
 ---
 
 ## Sample Chunks
 
-<!-- Paste 5 representative chunks from your document collection after running your ingestion pipeline.
-     For each chunk, note which source document it came from.
-     These must be actual text — not screenshots. -->
-
 | # | Source document | Chunk text |
 |---|----------------|------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
+| 1 | prof_paul_schmitz.txt | Professor: Paul Schmitz. Course: SES. School: Babson College. Review 1: Great professor. Really knows a lot about his material. Can be lecture-heavy at times, but classes are always discussion-oriented. |
+| 2 | prof_paul_schmitz.txt | He is a great professor, very energetic and makes class interesting. However he is quite a tough grader and gives a lot of content to read. Beware of his pop quizzes. No midterms, very tough final. |
+| 3 | prof_lee_gustafson.txt | Professor Gustafson is super funny and keeps things engaging. As long as you do the pre work and participate, an A is very doable. There is extra credit and a group project in the second half. |
+| 4 | prof_vincent_onyemah.txt | Vini is an AMAZING, funny guy and his classes are undoubtedly engaging. However, his grading policy is VERY heavy on participation. Be prepared to speak up every single class. |
+| 5 | prof_kandice_hauf.txt | She gives a lot of work and rarely gives above 90s on papers. Her exams are very easy but the class requires a lot of work and gives ALOT of readings and an assignment online for every class. |
 
 ---
 
 ## Embedding Model
 
-<!-- Name the embedding model you used and explain your choice.
-     Then answer: if you were deploying this system for real users and cost wasn't a constraint,
-     what tradeoffs would you weigh in choosing a different model?
-     Consider: context length limits, multilingual support, accuracy on domain-specific text,
-     latency, and local vs. API-hosted. -->
+**Model used:** all-MiniLM-L6-v2 via sentence-transformers (runs locally, no API key needed)
 
-**Model used:**
-
-**Production tradeoff reflection:**
+**Production tradeoff reflection:** For a production system I would consider text-embedding-3-small from OpenAI for higher accuracy on domain-specific text. However it costs money per token. all-MiniLM-L6-v2 is free and runs locally with no rate limits, making it ideal for this project. For a multilingual student body, a multilingual model like paraphrase-multilingual-MiniLM-L12-v2 would be worth exploring. Context length is also a consideration — all-MiniLM-L6-v2 handles up to 256 tokens which is sufficient for short reviews but would be limiting for longer documents.
 
 ---
 
 ## Retrieval Test Results
 
-<!-- Run these 3 queries through your retrieval system and record the top returned chunks.
-     For at least 2 of the 3, explain why the returned chunks are relevant to the query.
-     Results must be text — not screenshots. -->
-
-**Query 1:**
+**Query 1:** Is Professor Schmitz a tough grader?
 
 Top returned chunks:
--
--
--
+- [Prof Paul Schmitz] (dist: 0.215) — chunk about tough finals and detailed pop quizzes
+- [Prof Lee Gustafson] (dist: 0.506) — loosely related chunk about homework load
+- [Prof Paul Schmitz] (dist: 0.509) — chunk with general Schmitz introduction
+- [Prof Paul Schmitz] (dist: 0.528) — chunk about pre-class readings
 
-Relevance explanation:
+Relevance explanation: The top result (distance 0.215) is highly relevant — it directly mentions Schmitz's tough exams and pop quizzes. The other results are weaker matches pulled in because of the small corpus size.
 
 ---
 
-**Query 2:**
+**Query 2:** Does Vincent Onyemah grade heavily on participation?
 
 Top returned chunks:
--
--
--
+- [Prof Vincent Onyemah] — chunk stating grading policy is VERY heavy on participation
+- [Prof Lee Gustafson] — loosely related chunk about homework and group work
+- [Prof Paul Schmitz] — chunk about readings and participation
 
-Relevance explanation:
+Relevance explanation: The top chunk is directly relevant — it contains the exact phrase "VERY heavy on participation" and explains students must speak up every class. The other chunks are weaker matches from the small corpus.
 
 ---
 
-**Query 3:**
+**Query 3:** What do students say about Lee Gustafson's teaching style?
 
 Top returned chunks:
--
--
--
+- [Prof Lee Gustafson] — chunk saying he only talks but nothing about marketing comes out
+- [Prof Lee Gustafson] — chunk saying he is super funny and keeps things engaging
+- [Prof Paul Schmitz] — loosely related chunk about teaching style
 
-Relevance explanation:
+Relevance explanation: Both top chunks are directly relevant and show the mixed reviews about Gustafson — one negative and one positive. This is good retrieval because it captures both perspectives students have expressed.
 
 ---
 
 ## Grounded Generation
 
-<!-- Explain how your system enforces grounding — how does it prevent the LLM from answering
-     beyond the retrieved documents?
-     Describe both your system prompt (what instruction you gave the model) and any structural
-     choices (e.g., how you formatted the context, whether you filtered low-relevance chunks).
-     Do not just say "I told it to use the documents" — show the actual instruction or explain
-     the mechanism. -->
+**System prompt grounding instruction:** "You are a helpful assistant that answers questions about Babson College professors. Answer using ONLY the review text provided below. Do not draw on outside knowledge. Always state which professor your answer is about. If the answer is not in the provided text, say so explicitly — do not guess."
 
-**System prompt grounding instruction:**
-
-**How source attribution is surfaced in the response:**
+**How source attribution is surfaced in the response:** The retrieved chunk sources are displayed in a separate Sources field in the UI, listing each professor whose reviews were retrieved. The LLM is also instructed to name the professor in its response.
 
 ---
 
 ## Example Responses
 
-<!-- Provide at least 2 grounded responses (query + response + source attribution)
-     and 1 out-of-scope query showing your system's refusal.
-     All entries must be text — not screenshots. -->
-
 **Grounded response 1**
 
-Query:
+Query: Is Professor Schmitz a tough grader?
 
-Response:
+Response: My answer is about Professor Schmitz. According to the review text, Professor Schmitz has "tough final" exams and his "exam questions are tough" in his SES class, which suggests that he may be a tough grader.
 
-Source attribution:
+Source attribution: Prof Paul Schmitz
 
 ---
 
 **Grounded response 2**
 
-Query:
+Query: Does Vincent Onyemah grade heavily on participation?
 
-Response:
+Response: According to Review 1, Professor Vincent Onyemah grades heavily on participation. The review states that his grading policy is "VERY heavy on participation" and that students should "be prepared to speak up every single class" to do well.
 
-Source attribution:
+Source attribution: Prof Vincent Onyemah
 
 ---
 
 **Out-of-scope query**
 
-Query:
+Query: What is the best restaurant near Babson?
 
-System response (refusal):
+System response: The review text does not mention any information about restaurants near Babson College for any of the professors mentioned, including Vincent Onyemah, Kandice Hauf, Lee Gustafson, or Paul Schmitz.
 
 ---
 
 ## Query Interface
 
-<!-- Describe your query interface: what are the input fields, what does the output look like?
-     Then provide a complete sample interaction transcript showing a real exchange. -->
+**Input fields:** A single text box labeled "Your question" where the user types a question about Babson professors.
 
-**Input fields:**
-
-**Output format:**
+**Output format:** Two text boxes — "Answer" showing the grounded response from the LLM, and "Sources" listing which professor reviews were retrieved to generate the answer.
 
 ---
 
 **Sample Interaction Transcript**
 
-<!-- Show a complete query → response exchange as it actually appears in your interface.
-     Must be text — not a screenshot. -->
+> **User:** Does Kandice Hauf give easy exams?
 
-> **User:** 
+> **System:** According to Review 2, Professor Kandice Hauf's exams are very easy. Additionally, Review 2 and another review mention that her pop quizzes are easy as well.
 
-> **System:** 
+> **Sources:** Prof Kandice Hauf, Prof Paul Schmitz
 
 ---
 
 ## Evaluation Report
 
-<!-- Run your 5 test questions from planning.md through your system and record the results.
-     Be honest — a partially accurate or inaccurate result that you explain well is more
-     valuable than a suspiciously perfect result. -->
-
 | # | Question | Expected answer | System response (summarized) | Retrieval quality | Response accuracy |
 |---|----------|-----------------|------------------------------|-------------------|-------------------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
-
-**Retrieval quality:** Relevant / Partially relevant / Off-target  
-**Response accuracy:** Accurate / Partially accurate / Inaccurate
+| 1 | Is Professor Schmitz a tough grader? | Yes — tough final, detailed pop quizzes | Correctly identified tough finals and pop quizzes | Relevant | Accurate |
+| 2 | Does Vincent Onyemah grade heavily on participation? | Yes — tracks participation every class | Correctly stated grading is VERY heavy on participation | Relevant | Accurate |
+| 3 | What do students say about Lee Gustafson's teaching style? | Mixed — some find him engaging, others don't learn | Correctly presented both positive and negative reviews | Relevant | Accurate |
+| 4 | Does Kandice Hauf give easy exams? | Yes — exams are easy but papers rarely get above 90s | Correctly identified easy exams and pop quizzes | Relevant | Accurate |
+| 5 | Which Babson professor is most enthusiastic? | Vincent Onyemah | Incorrectly attributed the quote to Lee Gustafson | Partially relevant | Partially inaccurate |
 
 ---
 
 ## Failure Case Analysis
 
-<!-- Identify at least one question where retrieval or generation did not work as expected.
-     Write a specific explanation of *why* it failed, tied to a part of the pipeline.
+**Question that failed:** Which Babson professor is most enthusiastic?
 
-     "The answer was wrong" is not an explanation.
+**What the system returned:** The system said Lee Gustafson is the most enthusiastic professor, quoting "Extremely enthusiastic and energy fills the room."
 
-     "The relevant information was split across a chunk boundary, so retrieval returned
-     only half the context — the model didn't have enough to answer correctly" is an explanation.
+**Root cause (tied to a specific pipeline stage):** This is a chunking failure. The quote "Extremely enthusiastic and energy fills the room" was separated from the chunk containing Vincent Onyemah's name due to the 300-character chunk boundary. When the chunk was retrieved, it did not contain enough context identifying which professor it was about, so the LLM could not correctly attribute the quote.
 
-     "The embedding model treated the professor's nickname as out-of-vocabulary and returned
-     results from an unrelated review" is an explanation. -->
-
-**Question that failed:**
-
-**What the system returned:**
-
-**Root cause (tied to a specific pipeline stage):**
-
-**What you would change to fix it:**
+**What you would change to fix it:** Increase chunk size to 500 characters so each chunk is more likely to contain both the professor's name and the review content together. Alternatively, add professor name as a metadata field that gets injected into every chunk's text prefix.
 
 ---
 
 ## Spec Reflection
 
-<!-- Reflect on how planning.md shaped your implementation.
-     Answer both questions with at least 2–3 sentences each. -->
+**One way the spec helped you during implementation:** The chunking strategy section of planning.md forced me to think about chunk size before writing any code. Deciding on 300 characters with 50 overlap upfront meant I didn't have to make those decisions mid-implementation, and I had a clear target to verify against when I printed sample chunks.
 
-**One way the spec helped you during implementation:**
-
-**One way your implementation diverged from the spec, and why:**
+**One way your implementation diverged from the spec, and why:** The spec anticipated cleaner source attribution, but the implementation sometimes retrieves chunks from professors unrelated to the query because the corpus is small (only 18 chunks). With a larger document collection, retrieval would be more precise and sources would better match the query.
 
 ---
 
 ## AI Usage
 
-<!-- Describe at least 2 specific instances where you used an AI tool during this project.
-     For each: what did you give the AI as input, what did it produce, and what did you
-     change, override, or direct differently?
-
-     "I used Claude to help me code" is not sufficient.
-     "I gave Claude my Chunking Strategy section from planning.md and asked it to implement
-     chunk_text(). It returned a function using a fixed character split. I overrode the
-     chunk size from 500 to 200 because my documents are short reviews, not long guides." -->
-
 **Instance 1**
 
-- *What I gave the AI:*
-- *What it produced:*
-- *What I changed or overrode:*
+- *What I gave the AI:* My Chunking Strategy section from planning.md and document structure (short professor reviews in .txt files)
+- *What it produced:* A chunk_text() function using 300-character sliding window with 50-character overlap
+- *What I changed or overrode:* I verified the chunk count (18 chunks) and printed sample chunks to confirm they were self-contained before moving on
 
 **Instance 2**
 
-- *What I gave the AI:*
-- *What it produced:*
-- *What I changed or overrode:*
+- *What I gave the AI:* My grounding requirement — answer only from retrieved context, cite professor name as source
+- *What it produced:* A generate_response() function with a system prompt prohibiting outside knowledge
+- *What I changed or overrode:* I tested the out-of-scope question "What is the best restaurant near Babson?" to verify the system refused to answer rather than hallucinating, confirming the grounding instruction worked
